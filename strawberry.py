@@ -89,3 +89,54 @@ def quick_plot(dfx, geostr, txt = '', hline = None, timeadjust = 0):
     plt.xlim(df['datetime_int'].min(), df['datetime_int'].max())
     plt.ylim(15, 32)
     plt.show()
+    
+def quick_plot_accum(df, 
+                     xvar, 
+                     yvar, 
+                     geostr, 
+                     var_name, 
+                     var_unit, 
+                     txt = '', 
+                     hline = None):
+    
+    geo_name_txt = (
+        get_region_title(geostr) + 
+        ' [lat %.2f, lon %.2f x lat %.2f, lon %.2f]' % 
+        (
+            geostr['gp1']['lat_lon'][0], 
+            geostr['gp1']['lat_lon'][1], 
+            geostr['gp2']['lat_lon'][0], 
+            geostr['gp2']['lat_lon'][1]
+        )
+    )
+    
+    title_txt = var_name + '\n' + geo_name_txt + txt
+    
+    model_list = df['model'].unique()
+            
+    print(df.head())
+
+    lwr, pred, upr = get_pred_interval_sm(yvar, xvar, df)
+
+    ax = plt.gca()
+    sns.regplot(
+        x = xvar,
+        y = yvar,
+        data = df, 
+        scatter_kws={'alpha':0.2},
+        ax=ax
+    )
+    xticks = ax.get_xticks()
+    plt.xlabel('RCP4.5 experiments of models: ' + ', '.join(model_list))
+    plt.title(title_txt)
+    plt.ylabel(yvar + ' [' + var_unit + ']')
+    if hline is not None:
+        plt.hlines(hline, xmin = xticks[0], xmax = xticks[-1], linestyles='dotted', color='red')
+    
+    # prediction intervals
+    plt.plot(df[xvar], lwr, linestyle = 'dashed', color = 'gray')
+    plt.plot(df[xvar], upr, linestyle = 'dashed', color = 'gray')
+    
+    plt.xlim(df[xvar].min(), df[xvar].max())
+    plt.ylim(1000, 1900)
+    plt.show()
