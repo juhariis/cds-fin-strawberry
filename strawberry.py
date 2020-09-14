@@ -576,7 +576,7 @@ def plot_gdd_histogram(dfx,
     #print(yvar)
     
     df = dfx.copy()
-    df['decade'] = [10*mth.floor(x/10) for x in (df[xvar])]
+    df['decade'] = [30*mth.floor(x/30) for x in (df[xvar])]
     #print(df.head())
 
     geo_name_txt = (
