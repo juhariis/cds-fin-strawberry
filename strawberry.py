@@ -507,10 +507,70 @@ def plot_max_temp_trend(dfx, geostr, txt = '', hline = None, timeadjust = 0):
     plt.plot(df['datetime_int'], lwr, linestyle = 'dashed', color = 'gray')
     plt.plot(df['datetime_int'], upr, linestyle = 'dashed', color = 'gray')
     
+    xmargin = (df['datetime_int'].max() - df['datetime_int'].min()) * 0.025
     plt.xlim(df['datetime_int'].min(), df['datetime_int'].max())
+    
     plt.ylim(15, 32)
     plt.show()
     
+    
+def plot_max_temp_trend_dec(dfx, geostr, txt = '', hline = None, timeadjust = 0):
+    """
+    NOTE!! There is a quick fix which only works for the 2011-2099 set, needs fixing for
+    the standard case
+    """
+    geo_name_txt = (
+        get_region_title(geostr) + 
+        ' [lat %.2f, lon %.2f x lat %.2f, lon %.2f]' % 
+        (
+            geostr['gp1']['lat_lon'][0], 
+            geostr['gp1']['lat_lon'][1], 
+            geostr['gp2']['lat_lon'][0], 
+            geostr['gp2']['lat_lon'][1]
+        )
+    )
+    
+    df = dfx.copy()
+    
+    title_txt = df['var_name'].iloc[0] + '\n' + geo_name_txt + txt
+    
+    model_list = df['model'].unique()
+    
+    if df['var_unit'].iloc[0] == 'K':
+        df['var'] = df['var'] - 273
+        df['var_unit'] = 'C'
+        
+    #print(df.head(1))
+    #print(df.tail(1))
+    lwr, pred, upr = get_pred_interval_sm('var', 'date_decimal', df)
+
+    ax = plt.gca()
+    sns.regplot(
+        x = 'date_decimal',
+        y = 'var',
+        data = df, 
+        scatter_kws={'alpha':0.2},
+        ax=ax
+    )
+    plt.xlabel('RCP4.5 experiments of models: ' + ', '.join(model_list))
+    plt.title(title_txt)
+    plt.ylabel(df['var_id'].iloc[0] + ' [' + df['var_unit'].iloc[0] + ']')
+    
+    # ref line
+    if hline is not None:
+        plt.hlines(hline, xmin = df['date_decimal'].min(), xmax = df['date_decimal'].max(), linestyles='dotted', color='red')
+    
+    # prediction intervals
+    plt.plot(df['date_decimal'], lwr, linestyle = 'dashed', color = 'gray')
+    plt.plot(df['date_decimal'], upr, linestyle = 'dashed', color = 'gray')
+    
+    xmargin = (df['date_decimal'].max() - df['date_decimal'].min()) * 0.025
+    plt.xlim(df['date_decimal'].min() - xmargin, df['date_decimal'].max() + xmargin)
+    
+    plt.ylim(15, 32)
+    plt.show()
+    
+
 def plot_gdd_trend(df, 
                      xvar, 
                      yvar, 
@@ -558,9 +618,11 @@ def plot_gdd_trend(df,
     plt.plot(df[xvar], lwr, linestyle = 'dashed', color = 'gray')
     plt.plot(df[xvar], upr, linestyle = 'dashed', color = 'gray')
     
-    plt.xlim(df[xvar].min(), df[xvar].max())
+    xmargin = (df[xvar].max() - df[xvar].min()) * 0.025
+    plt.xlim(df[xvar].min() - xmargin, df[xvar].max() + xmargin)
     plt.ylim(1000, 1900)
     plt.show()
+    
     
 def plot_gdd_histogram(dfx, 
                      xvar, 
@@ -577,6 +639,9 @@ def plot_gdd_histogram(dfx,
     
     df = dfx.copy()
     df['decade'] = [30*mth.floor(x/30) for x in (df[xvar])]
+
+    print(df.groupby('decade')[yvar].mean())
+    
     #print(df.head())
 
     geo_name_txt = (
@@ -600,7 +665,8 @@ def plot_gdd_histogram(dfx,
     plt.title(title_txt)
     plt.ylabel('')  
     if vline is not None:
-        plt.vlines(vline, ymin = 0, ymax = 0.02)
+        plt.vlines(vline, ymin = 0, ymax = 0.04, linestyles = 'dashed', color = 'red')
+    plt.vlines(df.groupby('decade')[yvar].mean(), ymin = 0, ymax = 0.04)
     plt.gca().axes.get_yaxis().set_visible(False)
     plt.show()
     
