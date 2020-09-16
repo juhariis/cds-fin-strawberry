@@ -612,7 +612,7 @@ def plot_gdd_trend(df,
     plt.title(title_txt)
     plt.ylabel(yvar + ' [' + var_unit + ']')
     if hline is not None:
-        plt.hlines(hline, xmin = xticks[0], xmax = xticks[-1], linestyles='dotted', color='red')
+        plt.hlines(hline, xmin = xticks[0], xmax = xticks[-1], linestyles='dashed', color='red')
     
     # prediction intervals
     plt.plot(df[xvar], lwr, linestyle = 'dashed', color = 'gray')
@@ -631,6 +631,7 @@ def plot_gdd_histogram(dfx,
                      var_name, 
                      var_unit, 
                      txt = '', 
+                     vlineh = None,
                      vline = None):
 
     import math as mth
@@ -640,7 +641,12 @@ def plot_gdd_histogram(dfx,
     df = dfx.copy()
     df['decade'] = [30*mth.floor(x/30) for x in (df[xvar])]
 
+    print('mean')
     print(df.groupby('decade')[yvar].mean())
+    print('sd')
+    print(df.groupby('decade')[yvar].std())
+    print('median')
+    print(df.groupby('decade')[yvar].median())
     
     #print(df.head())
 
@@ -665,8 +671,84 @@ def plot_gdd_histogram(dfx,
     plt.title(title_txt)
     plt.ylabel('')  
     if vline is not None:
-        plt.vlines(vline, ymin = 0, ymax = 0.04, linestyles = 'dashed', color = 'red')
-    plt.vlines(df.groupby('decade')[yvar].mean(), ymin = 0, ymax = 0.04)
+        plt.vlines(vline, ymin = 0, ymax = vlineh, linestyles = 'dashed', color = 'red')
+    plt.vlines(df.groupby('decade')[yvar].mean(), ymin = 0, ymax = vlineh)
     plt.gca().axes.get_yaxis().set_visible(False)
     plt.show()
     
+def show_region_on_map(geo_coord):
+    """
+    Show the region on map for illustration
+    Coorner coordinate points shown only
+    """
+    import plotly
+    import chart_studio.plotly as py
+    import plotly.graph_objs as go
+    from plotly.offline import plot, iplot, init_notebook_mode
+    
+    init_notebook_mode()
+    
+    cases = []
+    cases.append(
+        go.Scattergeo(
+            lon = [
+                geo_coord['gp1']['lat_lon'][1], 
+                geo_coord['gp1']['lat_lon'][1], 
+                geo_coord['gp2']['lat_lon'][1], 
+                geo_coord['gp2']['lat_lon'][1]
+            ],
+            lat = [
+                geo_coord['gp1']['lat_lon'][0], 
+                geo_coord['gp2']['lat_lon'][0], 
+                geo_coord['gp1']['lat_lon'][0], 
+                geo_coord['gp2']['lat_lon'][0]
+            ],
+            marker = dict(
+                size = 2,
+                color = 'red',
+                opacity = 0.9,
+                line = dict(width = 2)
+            ),
+        )
+    )
+    cases[0]['mode'] = 'markers'
+
+    layout = go.Layout(
+        title = geo_coord['name'],
+        geo = dict(
+            resolution = 50,
+            scope = 'europe',
+            showframe = True,
+            showcoastlines = True,
+            showland = True,
+            landcolor = "rgb(229, 229, 229)",
+            countrycolor = "rgb(255, 255, 255)" ,
+            coastlinecolor = "rgb(255, 255, 255)",
+            lonaxis = dict( range= [ 19.0, 32 ] ),
+            lataxis = dict( range= [ 60.0, 70.0 ] ),         
+        ),
+        legend = dict(
+               traceorder = 'reversed'
+        )
+    )
+
+    fig = go.Figure(
+        layout=layout, 
+        data=cases
+    )
+
+    fig.update_layout(
+        autosize=False,
+        width=300,
+        height=500,
+        margin=dict(
+            l=3,
+            r=3,
+            b=10,
+            t=30,
+            pad=4
+        ),
+        paper_bgcolor="LightGray",
+    )
+
+    iplot(fig, validate=False, filename='iantest')
