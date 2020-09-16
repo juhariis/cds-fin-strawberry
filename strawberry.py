@@ -752,3 +752,98 @@ def show_region_on_map(geo_coord):
     )
 
     iplot(fig, validate=False, filename='iantest')
+
+    
+    
+def show_region_area_on_map(geo_coord):
+    """
+    Show the region on map for illustration
+    Coorner coordinate points shown only
+    """
+    import plotly
+    #import chart_studio.plotly as py
+    import plotly.graph_objs as go
+    from plotly.offline import plot, iplot, init_notebook_mode
+    
+    init_notebook_mode()
+    
+    fig = go.Figure()
+    
+    fig.add_trace(
+        go.Scattergeo(
+            lon = [
+                geo_coord['gp1']['lat_lon'][1], 
+                geo_coord['gp1']['lat_lon'][1], 
+                geo_coord['gp2']['lat_lon'][1], 
+                geo_coord['gp2']['lat_lon'][1]
+            ],
+            lat = [
+                geo_coord['gp1']['lat_lon'][0], 
+                geo_coord['gp2']['lat_lon'][0], 
+                geo_coord['gp1']['lat_lon'][0], 
+                geo_coord['gp2']['lat_lon'][0]
+            ],
+            mode = 'markers',
+            marker = dict(
+                size = 2,
+                color = 'rgb(255, 0, 0)',
+                line = dict(
+                    width = 3,
+                    color = 'rgba(68, 68, 68, 0)'
+                )
+            )
+        )
+    )
+    
+    fig.add_trace(
+        go.Scattergeo(
+            locationmode = 'USA-states',
+            lon = [
+                geo_coord['gp1']['lat_lon'][1], 
+                geo_coord['gp2']['lat_lon'][1], 
+                geo_coord['gp2']['lat_lon'][1],
+                geo_coord['gp1']['lat_lon'][1],
+                geo_coord['gp1']['lat_lon'][1] 
+            ],
+            lat = [
+                geo_coord['gp1']['lat_lon'][0], 
+                geo_coord['gp1']['lat_lon'][0], 
+                geo_coord['gp2']['lat_lon'][0], 
+                geo_coord['gp2']['lat_lon'][0],
+                geo_coord['gp1']['lat_lon'][0] 
+            ],
+            mode = 'lines',
+            line = dict(width = 1,color = 'red'),
+            opacity = 1
+        )
+    )
+
+    fig.update_layout(
+        title = geo_coord['name'],
+        geo = dict(
+            resolution = 50,
+            scope = 'europe',
+            showframe = True,
+            showcoastlines = True,
+            showland = True,
+            landcolor = "rgb(229, 229, 229)",
+            countrycolor = "rgb(255, 255, 255)" ,
+            coastlinecolor = "rgb(255, 255, 255)",
+            lonaxis = dict( range= [ 19.0, 32 ] ),
+            lataxis = dict( range= [ 60.0, 70.0 ] ),         
+        ),
+        autosize=False,
+        width=300,
+        height=500,
+        margin=dict(
+            l=3,
+            r=3,
+            b=10,
+            t=30,
+            pad=4
+        ),
+        paper_bgcolor="LightGray",
+        showlegend = False
+    )
+
+    iplot(fig)
